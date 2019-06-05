@@ -42,7 +42,7 @@ int gpio_clk = 22;
 
 //int gpio_bus[32] = {13, 14, 15, 16, 17, 18, 19, 22, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 //int gpio_clk = 21;
-int clkspeed_hz = 10*1000*1000;
+int clkspeed_hz = 1*1000*1000;
 i2s_parallel_cfg_bits_t bits = I2S_PARALLEL_BITS_8;
 
 #define DMA_MAX (4096-4)
@@ -127,6 +127,7 @@ i2sparallel::i2sparallel(i2s_parallel_buffer_desc_t *bufa, i2s_parallel_buffer_d
     }
     //ToDo: Clk/WS may need inversion?
     gpio_setup_out(gpio_clk, sig_clk);
+    gpio_matrix_out(gpio_clk, sig_clk, true, false);
 
     //Power on dev
     if (&hw==&I2S0) {
@@ -153,9 +154,9 @@ i2sparallel::i2sparallel(i2s_parallel_buffer_desc_t *bufa, i2s_parallel_buffer_d
     hw.clkm_conf.val=0;
     hw.clkm_conf.clka_en=0;
     hw.clkm_conf.clkm_div_a=1;
-    hw.clkm_conf.clkm_div_b=0;
-    //We ignore the possibility for fractional division here.
-    hw.clkm_conf.clkm_div_num=1;
+    hw.clkm_conf.clkm_div_b=1;
+    //We ignore the possibility for fractional division here, clkspeed_hz must round up for a fractional clock speed, must result in >= 2
+    hw.clkm_conf.clkm_div_num=(20000000/clkspeed_hz)-1;
 
     hw.fifo_conf.val=0;
     hw.fifo_conf.rx_fifo_mod_force_en=1;
