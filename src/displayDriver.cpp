@@ -92,7 +92,7 @@ Color *framebuffer;
 
 i2s_parallel_buffer_desc_t bufdesc[2][1<<BITPLANE_CNT];
 
-uint16_t *bitplane[2][BITPLANE_CNT];
+uint8_t *bitplane[2][BITPLANE_CNT];
 int apos=0; //which frame in the animation we're on
 int backbuf_id=0; //which buffer is the backbuffer, as in, which one is not active so we can write to it
 //Get a pixel from the image at pix, assuming the image is a 64x32 8R8G8B image
@@ -105,7 +105,7 @@ displayDriver::displayDriver() {
         framebuffer = (Color *) malloc(HEIGHT*WIDTH*sizeof(Color));
         for (int i=0; i<BITPLANE_CNT; i++) {
                 for (int j=0; j<2; j++) {
-                        bitplane[j][i] = (uint16_t *) heap_caps_malloc(BITPLANE_SZ*sizeof(uint16_t), MALLOC_CAP_DMA);
+                        bitplane[j][i] = (uint8_t *) heap_caps_malloc(BITPLANE_SZ*sizeof(uint8_t), MALLOC_CAP_DMA);
                         assert(bitplane[j][i] && "Can't allocate bitplane memory");
                 }
         }
@@ -125,7 +125,7 @@ displayDriver::displayDriver() {
                 //Insert the plane
                 for (int j=0; j<2; j++) {
                         bufdesc[j][i].memory=bitplane[j][ch];
-                        bufdesc[j][i].size=BITPLANE_SZ*2;
+                        bufdesc[j][i].size=BITPLANE_SZ;
                 }
                 //Magic to make sure we choose this bitplane an appropriate time later next time
                 times[ch]+=(1<<(BITPLANE_CNT-ch));
@@ -150,24 +150,20 @@ void displayDriver::render16() {
         //Fill bitplanes with the data for the current image
         for (int pl=0; pl<BITPLANE_CNT; pl++) {
                 int mask=(1<<(8-BITPLANE_CNT+pl));         //bitmask for pixel data in input for this bitplane
-                uint16_t *p=bitplane[backbuf_id][pl];         //bitplane location to write to
+                uint8_t *p=bitplane[backbuf_id][pl];         //bitplane location to write to
                 for (unsigned int y=0; y<8; y++) {
                         int lbits=0;         //Precalculate line bits of the *previous* line, which is the one we're displaying now
                         if ((y-1)&1) lbits|=BIT_A;
                         if ((y-1)&2) lbits|=BIT_B;
                         if ((y-1)&4) lbits|=BIT_C;
                         for (int fx=0; fx<32; fx++) {
-    #if DISPLAY_ROWS_SWAPPED
-                                int x=fx^1;         //to correct for the fact that the stupid LED screen I have has each row swapped...
-    #else
-                                int x=fx;
-    #endif
+                                int x = fx^2;   //Apply correction. this fixes dma byte stream order
 
                                 int v=lbits;
                                 //Do not show image while the line bits are changing
                                 //Don't display for the first few cycles to remove line bleed
-                                if (fx<10 || fx>=brightness) v|= BIT_OE;
-                                if (fx==30) v|= BIT_LAT;         //latch on second-to-last bit... why not last bit? Dunno, probably a timing thing.
+                                if (x<6 || x>=brightness) v|= BIT_OE;
+                                if (x==31) v|= BIT_LAT;         //latch on second-to-last bit... why not last bit? Dunno, probably a timing thing.
 
                                 Color c1;
                                 int yreal = y;
@@ -177,7 +173,7 @@ void displayDriver::render16() {
                                 if (c1.RGB[0] & mask) v|= BIT_R1;
                                 if (c1.RGB[1] & mask) v|= BIT_G1;
                                 if (c1.RGB[2] & mask) v|= BIT_B1;                               
-
+                                
                                 //Save the calculated value to the bitplane memory
                                 *p++=v;
                         }

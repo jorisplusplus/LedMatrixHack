@@ -114,9 +114,11 @@ i2sparallel::i2sparallel(i2s_parallel_buffer_desc_t *bufa, i2s_parallel_buffer_d
     } else {
         if (bits==I2S_PARALLEL_BITS_32) {
             sig_data_base=I2S1O_DATA_OUT0_IDX;
-        } else {
+        } else if(bits==I2S_PARALLEL_BITS_16){
             //Because of... reasons... the 16-bit values for i2s1 appear on d8...d23
             sig_data_base=I2S1O_DATA_OUT8_IDX;
+        } else {
+            sig_data_base=I2S1O_DATA_OUT0_IDX;
         }
         sig_clk=I2S1O_WS_OUT_IDX;
     }
@@ -150,13 +152,14 @@ i2sparallel::i2sparallel(i2s_parallel_buffer_desc_t *bufa, i2s_parallel_buffer_d
     hw.sample_rate_conf.tx_bits_mod=bits;
     hw.sample_rate_conf.rx_bck_div_num=4; //ToDo: Unsure about what this does...
     hw.sample_rate_conf.tx_bck_div_num=4;
+    hw.conf2.lcd_tx_wrx2_en=1;
 
     hw.clkm_conf.val=0;
     hw.clkm_conf.clka_en=0;
     hw.clkm_conf.clkm_div_a=1;
     hw.clkm_conf.clkm_div_b=1;
     //We ignore the possibility for fractional division here, clkspeed_hz must round up for a fractional clock speed, must result in >= 2
-    hw.clkm_conf.clkm_div_num=(20000000/clkspeed_hz)-1;
+    hw.clkm_conf.clkm_div_num=(40000000/clkspeed_hz)-1;
 
     hw.fifo_conf.val=0;
     hw.fifo_conf.rx_fifo_mod_force_en=1;
