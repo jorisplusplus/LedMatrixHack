@@ -86,7 +86,7 @@
 #define BIT_LAT (1<<6) //connected to GPIO26 here
 #define BIT_OE (1<<7)  //connected to GPIO25 here
 
-int brightness=20;
+int brightness=10;
 
 Color *framebuffer;
 
@@ -98,6 +98,8 @@ int backbuf_id=0; //which buffer is the backbuffer, as in, which one is not acti
 //Get a pixel from the image at pix, assuming the image is a 64x32 8R8G8B image
 //Returns it as an uint32 with the lower 24 bits containing the RGB values.
 i2sparallel* i2sDevice;
+#define min(a,b) ((a)<(b)?(a):(b))
+#define max(a,b) ((a)>(b)?(a):(b))
 
 displayDriver::displayDriver() {
         //Change to set the global brightness of the display, range 1-63
@@ -146,6 +148,10 @@ Color* displayDriver::getFrameBuffer() {
         return framebuffer;
 }
 
+void displayDriver::setBrightness(int brightness) {
+        brightness = min(max(2, brightness), 32);
+}
+
 void displayDriver::render16() {
         //Fill bitplanes with the data for the current image
         for (int pl=0; pl<BITPLANE_CNT; pl++) {
@@ -158,12 +164,11 @@ void displayDriver::render16() {
                         if ((y-1)&4) lbits|=BIT_C;
                         for (int fx=0; fx<32; fx++) {
                                 int x = fx^2;   //Apply correction. this fixes dma byte stream order
-
-                                int v=lbits;
+                                int v = lbits;
                                 //Do not show image while the line bits are changing
-                                //Don't display for the first few cycles to remove line bleed
-                                if (x<6 || x>=brightness) v|= BIT_OE;
-                                if (x==31) v|= BIT_LAT;         //latch on second-to-last bit... why not last bit? Dunno, probably a timing thing.
+                                //Don't display for the first cycle to remove line bleed
+                                if (x<2 || x>=brightness) v|= BIT_OE;
+                                if (x==31) v|= BIT_LAT;         //latch on last bit...
 
                                 Color c1;
                                 int yreal = y;

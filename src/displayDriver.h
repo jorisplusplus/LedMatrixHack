@@ -8,6 +8,7 @@ public:
   displayDriver();
   Color* getFrameBuffer();
   void render16();
+  void setBrightness(int brightness);
 };
 
 #endif
