@@ -114,6 +114,13 @@ typedef union{
 
 class rendertask {
     public:
+	/*
+	* Each rendertask should implement their render function.
+	* The render function should not introduce any delay, like receiving/sending serial, spi i2c etc.
+	* Also the render method must ensure that no data is been written outside of the display
+	*
+	* frame is a pointer to the frame buffer where render method should write to access is frame[y*WIDTH+x]
+	*/
     virtual void render(Color* frame);
     protected:
     int x, y;
