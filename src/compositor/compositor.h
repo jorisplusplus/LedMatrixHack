@@ -37,6 +37,7 @@ typedef struct scrollText{
 } scrollText_t;
 
   void compositor_init();
+  void compositor_clear();
 
   void compositor_setBackground(Color color);
   void compositor_addText(char *text, Color color, int x, int y);

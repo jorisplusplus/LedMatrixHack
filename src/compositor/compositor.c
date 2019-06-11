@@ -124,6 +124,23 @@ void compositor_init() {
 }
 
 /*
+Clears the render list. Keeps the background
+ */
+void compositor_clear() {
+        renderTask_t *node = head;
+        renderTask_t *next;
+        while(node != NULL) {
+                next = node->next;
+                if(node->id == 2 || node->id == 3) {
+                        free(node->payload);
+                }
+                free(node);
+                node = next;
+        }
+        head = NULL;
+}
+
+/*
 * Sets the background color of the display.
 */
 void compositor_setBackground(Color color) {
