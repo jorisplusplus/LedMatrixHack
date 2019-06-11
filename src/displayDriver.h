@@ -2,13 +2,11 @@
 #define DISPLAYDRIVER_H
 
 #include "compositor/compositor.h"
-
-class displayDriver {
-public:
-  displayDriver();
-  Color* getFrameBuffer();
-  void render16();
-  void setBrightness(int brightness);
-};
+  
+  
+void displayDriver_init();
+Color* getFrameBuffer();
+void render16();
+void setBrightness(int brightness);
 
 #endif

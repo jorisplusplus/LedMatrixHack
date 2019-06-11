@@ -6,6 +6,7 @@
 #include "esp_heap_caps.h"
 #include "val2pwm.h"
 #include "i2s_parallel.h"
+
 #include "esp32-hal.h"
 #include "displayDriver.h"
 /*
@@ -97,11 +98,10 @@ int apos=0; //which frame in the animation we're on
 int backbuf_id=0; //which buffer is the backbuffer, as in, which one is not active so we can write to it
 //Get a pixel from the image at pix, assuming the image is a 64x32 8R8G8B image
 //Returns it as an uint32 with the lower 24 bits containing the RGB values.
-i2sparallel* i2sDevice;
 #define min(a,b) ((a)<(b)?(a):(b))
 #define max(a,b) ((a)>(b)?(a):(b))
 
-displayDriver::displayDriver() {
+void displayDriver_init() {
         //Change to set the global brightness of the display, range 1-63
         //Warning when set too high: Do not look into LEDs with remaining eye.
         framebuffer = (Color *) malloc(HEIGHT*WIDTH*sizeof(Color));
@@ -139,20 +139,20 @@ displayDriver::displayDriver() {
         bufdesc[1][((1<<BITPLANE_CNT)-1)].memory=NULL;
 
         //Setup I2S
-        i2sDevice = new i2sparallel(bufdesc[0], bufdesc[1]);
+        i2sparallel_init(bufdesc[0], bufdesc[1]);
 
         printf("I2S setup done.\n");
 }
 
-Color* displayDriver::getFrameBuffer() {
+Color* getFrameBuffer() {
         return framebuffer;
 }
 
-void displayDriver::setBrightness(int brightness) {
+void setBrightness(int brightness) {
         brightness = min(max(2, brightness), 32);
 }
 
-void displayDriver::render16() {
+void render16() {
         //Fill bitplanes with the data for the current image
         for (int pl=0; pl<BITPLANE_CNT; pl++) {
                 int mask=(1<<(8-BITPLANE_CNT+pl));         //bitmask for pixel data in input for this bitplane
@@ -186,7 +186,7 @@ void displayDriver::render16() {
         }
 
         //Show our work!
-        i2sDevice->flipBuffer(backbuf_id);
+        i2sparallel_flipBuffer(backbuf_id);
         backbuf_id^=1;
         //Bitplanes are updated, new image shows now.
 }

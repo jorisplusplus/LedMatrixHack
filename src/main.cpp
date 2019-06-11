@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
-#include <string.h>
 #include <stdlib.h>
 
 
@@ -19,14 +18,15 @@
 
 #include "esp_heap_caps.h"
 #include "esp32-hal.h"
-#include "compositor/compositor.h"
-#include "displayDriver.h"
 
+
+extern "C" {
+#include "displayDriver.h"
+#include "compositor/compositor.h"
+}
 
 
 //demo *demos;
-displayDriver *driver;
-compositor *comp;
 bool active;
 
 const char* ssid     = "LedMatrix";
@@ -37,10 +37,10 @@ void displayTask(void *pvParameter) {
         TickType_t xLastWakeTime = xTaskGetTickCount();
         const TickType_t xFrequency = 20;
         while(active) {
-                vTaskDelayUntil( &xLastWakeTime, xFrequency );
+                vTaskDelayUntil( &xLastWakeTime, 1000/xFrequency );
                 //demos->dispSnow();
-                comp->composite();
-                driver->render16();
+                composite();
+                render16();
         }
         printf("Exiting render task\n");
         vTaskDelete( NULL );
@@ -65,16 +65,29 @@ void webServer(void *pvParameter) {
 
 void setup() {
   delay(500);
+        pinMode(5, OUTPUT);
+        digitalWrite(5, 0);
+
         active = true;
-        driver = new displayDriver();
-        comp = new compositor();
+        displayDriver_init();
+        compositor_init();
         //demos = new demo();
         //demos->selectSim(0, 1216);
         //demos->setBuffer(driver->getFrameBuffer());
-        comp->setBuffer(driver->getFrameBuffer());
+        compositor_setBuffer(getFrameBuffer());
         Color green;
         green.value = 0x0000FF00;
-        comp->addText("Camp", green, 0, 0);
+        Color red;
+        red.value = 0x000000FF;
+        Color blue;
+        blue.value = 0x00FF0000;
+        Color white;
+        white.value = 0xFFFFFFFF;
+        compositor_addText("B", blue, 15, 0);
+        compositor_addText("G", green, 10, 0);
+        compositor_addText("W", white, 0, 0);
+        compositor_addText("R", red, 5, 0);
+        compositor_addScrollText("Hello", red, 20, 0, 10);
         nvs_flash_init();
         xTaskCreatePinnedToCore(
                 &displayTask, /* Task function. */

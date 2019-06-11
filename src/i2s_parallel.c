@@ -104,7 +104,7 @@ static int i2snum() {
     return (&hw==&I2S0)?0:1;
 }
 
-i2sparallel::i2sparallel(i2s_parallel_buffer_desc_t *bufa, i2s_parallel_buffer_desc_t *bufb) {
+void i2sparallel_init(i2s_parallel_buffer_desc_t *bufa, i2s_parallel_buffer_desc_t *bufb) {
     //Figure out which signal numbers to use for routing
     printf("Setting up parallel I2S bus at I2S%d\n", i2snum());
     int sig_data_base, sig_clk;
@@ -211,7 +211,7 @@ i2sparallel::i2sparallel(i2s_parallel_buffer_desc_t *bufa, i2s_parallel_buffer_d
 
 
 //Flip to a buffer: 0 for bufa, 1 for bufb
-void i2sparallel::flipBuffer(int bufid) {
+void i2sparallel_flipBuffer(int bufid) {
     int no=i2snum();
     if (i2s_state[no]==NULL) return;
     lldesc_t *active_dma_chain;

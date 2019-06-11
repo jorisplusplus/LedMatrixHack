@@ -15,9 +15,7 @@ typedef struct i2s_parallel_buffer_desc {
     size_t size;
 } i2s_parallel_buffer_desc_t;
 
-class i2sparallel {
-public:
-  i2sparallel(i2s_parallel_buffer_desc_t *bufa, i2s_parallel_buffer_desc_t *bufb);
-  void flipBuffer(int bufid);
-};
+void i2sparallel_init(i2s_parallel_buffer_desc_t *bufa, i2s_parallel_buffer_desc_t *bufb);
+void i2sparallel_flipBuffer(int bufid);
+
 #endif
