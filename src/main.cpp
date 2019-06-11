@@ -76,11 +76,11 @@ void setup() {
         //demos->setBuffer(driver->getFrameBuffer());
         compositor_setBuffer(getFrameBuffer());
         Color green;
-        green.value = 0x0000FF00;
+        green.value = 0x0000AA00;
         Color red;
         red.value = 0x000000FF;
         Color blue;
-        blue.value = 0x00FF0000;
+        blue.value = 0x00550000;
         Color white;
         white.value = 0xFFFFFFFF;
         compositor_addText("B", blue, 15, 0);
